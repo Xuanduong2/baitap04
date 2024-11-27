@@ -1,0 +1,120 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Windows.Forms;
+
+namespace EmployeeManagement
+{
+    public partial class MainForm : Form
+    {
+        private List<Employee> employees = new List<Employee>();
+
+        public MainForm()
+        {
+            InitializeComponent();
+            InitializeDataGridView();
+        }
+
+        private void InitializeDataGridView()
+        {
+            dataGridView1.DataSource = new BindingSource { DataSource = employees };
+            dataGridView1.AutoGenerateColumns = true;
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            EmployeeForm employeeForm = new EmployeeForm();
+            if (employeeForm.ShowDialog() == DialogResult.OK)
+            {
+                employees.Add(employeeForm.Employee);
+                RefreshDataGridView();
+            }
+        }
+
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow != null)
+            {
+                int index = dataGridView1.CurrentRow.Index;
+                Employee selectedEmployee = employees[index];
+
+                EmployeeForm employeeForm = new EmployeeForm(selectedEmployee);
+                if (employeeForm.ShowDialog() == DialogResult.OK)
+                {
+                    employees[index] = employeeForm.Employee;
+                    RefreshDataGridView();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select an employee to edit.", "Edit Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow != null)
+            {
+                int index = dataGridView1.CurrentRow.Index;
+                employees.RemoveAt(index);
+                RefreshDataGridView();
+            }
+            else
+            {
+                MessageBox.Show("Please select an employee to delete.", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void RefreshDataGridView()
+        {
+            dataGridView1.DataSource = null;
+            dataGridView1.DataSource = new BindingSource { DataSource = employees };
+        }
+    }
+
+    public partial class EmployeeForm : Form
+    {
+        public Employee Employee { get; private set; }
+
+        public EmployeeForm() : this(null) { }
+
+        public EmployeeForm(Employee employee)
+        {
+            InitializeComponent();
+
+            if (employee != null)
+            {
+                txtName.Text = employee.Name;
+                txtPosition.Text = employee.Position;
+                numericSalary.Value = employee.Salary;
+
+                Employee = employee;
+            }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtPosition.Text))
+            {
+                MessageBox.Show("Please fill out all fields.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (Employee == null) Employee = new Employee();
+
+            Employee.Name = txtName.Text;
+            Employee.Position = txtPosition.Text;
+            Employee.Salary = numericSalary.Value;
+
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+    }
+
+    public class Employee
+    {
+        public string Name { get; set; }
+        public string Position { get; set; }
+        public decimal Salary { get; set; }
+    }
+}
